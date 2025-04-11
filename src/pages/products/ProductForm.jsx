@@ -14,7 +14,6 @@ import { useFormik } from 'formik';
 const validationSchema = yup.object({
   name: yup.string().required('Name is required'),
   slug: yup.string().required('Slug is required'),
-  description: yup.string().required('Description is required'),
   price: yup.number().positive('Price must be positive').required('Price is required'),
   stock: yup.number().integer('Stock must be an integer').min(0, 'Stock cannot be negative').required('Stock is required'),
   status: yup.string().required('Status is required'),
@@ -51,17 +50,29 @@ const ProductForm = () => {
           formData.append(key, values[key]);
         });
         
-        // Add images to formData
-        images.forEach((image, index) => {
-          formData.append(`images[${index}]`, image.file);
-          if (index === mainImageIndex) {
-            formData.append('main_image_index', index);
+        // Check if we have at least one image
+        if (images.length === 0) {
+          alert('Please add at least one image for the product');
+          return;
+        }
+        
+        // Add image to formData - backend expects "image" field, not "images"
+        if (images.length > 0) {
+          // Use the first image (or the main image) as the primary image
+          const mainImage = images[mainImageIndex];
+          if (!mainImage.isExisting) {
+            formData.append('image', mainImage.file);
           }
-        });
+        }
+        
+        // Log the form data for debugging
+        console.log('Form values being submitted:', values);
+        console.log('Images being submitted:', images);
+        console.log('Main image index:', mainImageIndex);
 
         if (isEditMode) {
           formData.append('_method', 'PUT'); // Laravel requires _method for PUT requests
-          await api.post(`v1/admin/products/${id}`, formData, {
+          await api.post(`http://127.0.0.1:8000/api/v1/admin/products/${id}`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             },
@@ -71,7 +82,8 @@ const ProductForm = () => {
             }
           });
         } else {
-          await api.post('v1/admin/products', formData, {
+          // Make sure we're using the correct endpoint for creating products
+          const response = await api.post('http://127.0.0.1:8000/api/v1/admin/products', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             },
@@ -80,11 +92,14 @@ const ProductForm = () => {
               setUploadProgress(percentCompleted);
             }
           });
+          console.log('Create product response:', response.data);
         }
         
-        navigate('/admin/products');
+        navigate('/products');
       } catch (error) {
-        console.error('Error saving product:', error);
+        console.error('Error saving product:', error.response?.data || error.message || error);
+        // Alert the user about the error
+        alert('Error saving product: ' + (error.response?.data?.message || error.message || 'Unknown error'));
       }
     },
   });
@@ -98,8 +113,8 @@ const ProductForm = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('v1/admin/categories');
-      setCategories(response.data.data || []);
+      const response = await api.get('http://127.0.0.1:8000/api/v1/admin/categories');
+      setCategories(response.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -107,14 +122,16 @@ const ProductForm = () => {
 
   const fetchProduct = async () => {
     try {
-      const response = await api.get(`v1/admin/products/${id}`);
-      const product = response.data.data;
+      console.log('Fetching product with ID:', id);
+      const response = await api.get(`http://127.0.0.1:8000/api/v1/admin/products/${id}`);
+      console.log('Product data:', response.data);
+      
+      const product = response.data;
       
       // Set form values
       formik.setValues({
         name: product.name || '',
         slug: product.slug || '',
-        description: product.description || '',
         price: product.price || '',
         stock: product.stock || '',
         status: product.status || 'available',
@@ -194,7 +211,7 @@ const ProductForm = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box display="flex" alignItems="center" mb={4}>
-        <IconButton onClick={() => navigate('/admin/products')} sx={{ mr: 2 }}>
+        <IconButton onClick={() => navigate('/products')} sx={{ mr: 2 }}>
           <ArrowBack />
         </IconButton>
         <Typography variant="h4" component="h1">
@@ -243,22 +260,7 @@ const ProductForm = () => {
               </Box>
             </Grid>
             
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                id="description"
-                name="description"
-                label="Description"
-                multiline
-                rows={4}
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.description && Boolean(formik.errors.description)}
-                helperText={formik.touched.description && formik.errors.description}
-                margin="normal"
-              />
-            </Grid>
+            
             
             <Grid item xs={12} md={4}>
               <TextField
@@ -427,7 +429,7 @@ const ProductForm = () => {
             <Grid item xs={12} sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <Button 
                 variant="outlined" 
-                onClick={() => navigate('/admin/products')}
+                onClick={() => navigate('/products')}
                 sx={{ mr: 2 }}
               >
                 Cancel
