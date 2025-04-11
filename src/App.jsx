@@ -8,6 +8,9 @@ import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import Unauthorized from './pages/Unauthorized';
 import Layout from './components/Layout';
+import ProductList from './pages/products/ProductList';
+import ProductCreate from './pages/products/ProductCreate';
+import ProductEdit from './pages/products/ProductEdit';
 
 function App() {
   return (
@@ -28,14 +31,15 @@ function App() {
             {/* Protected routes */}
             <Route element={<ProtectedRoute roles={['product_manager', 'super_admin']} />}>
               <Route path="dashboard" element={<Dashboard />} />
+              
+              {/* Product management routes */}
+              <Route path="products" element={<ProductList />} />
+              <Route path="products/create" element={<ProductCreate />} />
+              <Route path="products/edit/:id" element={<ProductEdit />} />
             </Route>
             
             <Route element={<ProtectedRoute roles={['super_admin']} />}>
               <Route path="categories" element={<div>Categories Management</div>} />
-            </Route>
-            
-            <Route element={<ProtectedRoute roles={['product_manager', 'super_admin']} />}>
-              <Route path="products" element={<div>Products Management</div>} />
             </Route>
           </Route>
           <Route path="*" element={<div>404</div>} />
