@@ -11,6 +11,9 @@ import Layout from './components/Layout';
 import ProductList from './pages/products/ProductList';
 import ProductCreate from './pages/products/ProductCreate';
 import ProductEdit from './pages/products/ProductEdit';
+import CategoryList from './pages/categories/CategoryList';
+import CategoryCreate from './pages/categories/CategoryCreate';
+import CategoryEdit from './pages/categories/CategoryEdit';
 
 function App() {
   return (
@@ -36,6 +39,11 @@ function App() {
               <Route path="products" element={<ProductList />} />
               <Route path="products/create" element={<ProductCreate />} />
               <Route path="products/edit/:id" element={<ProductEdit />} />
+              
+              {/* Category management routes */}
+              <Route path="categories" element={<CategoryList />} />
+              <Route path="categories/create" element={<CategoryCreate />} />
+              <Route path="categories/edit/:id" element={<CategoryEdit />} />
             </Route>
             
             <Route element={<ProtectedRoute roles={['super_admin']} />}>
