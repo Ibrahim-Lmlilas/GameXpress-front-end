@@ -23,12 +23,14 @@ const ProductList = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      // Update API endpoint to match what's shown in Postman
       const response = await api.get('http://127.0.0.1:8000/api/v1/admin/products');
       console.log('API Response:', response.data);
       
-      // Handle the response format correctly based on your API
-      // If the data is directly in response.data (as shown in Postman)
+      // Log the first product to see its structure
+      if (response.data && response.data.length > 0) {
+        console.log('First product structure:', response.data[0]);
+      }
+      
       setProducts(response.data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -111,12 +113,31 @@ const ProductList = () => {
                 <TableRow key={product.id}>
                   <TableCell>{product.id}</TableCell>
                   <TableCell>
-                    {product.image_url && (
+                    {product.image_url ? (
                       <img 
                         src={product.image_url} 
                         alt={product.name} 
                         style={{ width: '50px', height: '50px', objectFit: 'cover' }} 
                       />
+                    ) : product.image ? (
+                      <img 
+                        src={product.image} 
+                        alt={product.name} 
+                        style={{ width: '50px', height: '50px', objectFit: 'cover' }} 
+                      />
+                    ) : (
+                      <Box 
+                        sx={{ 
+                          width: '50px', 
+                          height: '50px', 
+                          bgcolor: 'grey.300', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center' 
+                        }}
+                      >
+                        No img
+                      </Box>
                     )}
                   </TableCell>
                   <TableCell>{product.name}</TableCell>
